@@ -26,9 +26,11 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
-    - run: cd ${{ github.workspace }}/src/main/angular
-    - run: npm install -g @angular/cli
-    - run: npm install
-    - run: npm audit
-    - run: npm run build
+    - name: Install Angular CLI
+      run: |
+        cd ${{ github.workspace }}/src/main/angular
+        npm install -g @angular/cli
+        npm install
+        npm audit
+        npm run build
     
