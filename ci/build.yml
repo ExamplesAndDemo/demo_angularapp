@@ -1,0 +1,72 @@
+# Node.js
+# Build a general Node.js project with npm. test
+# Add steps that analyze code, save build artifacts, deploy, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/javascript
+
+trigger:
+- main
+- feature/*
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  environment: dev
+  BRANCH_NAME: $[replace(variables['Build.SourceBranch'], 'refs/heads/', '')]
+  isMain: $[startsWith(variables['Build.SourceBranch'], 'refs/heads/main')]
+  isFeature: $[startsWith(variables['Build.SourceBranch'], 'refs/heads/feature/')]
+  Scan_condition: $[or(variables.isMain, variables.isFeature)]
+  repoName: $[variables['Build.Repository.Name']]
+
+stages:
+# - stage: codeQuality
+#   condition: and(ne(variables['scan'], ''), succeeded(), eq(variables.Scan_condition, 'true'))
+#   jobs:
+#   - job: Sonarscan
+#     steps:
+#       - checkout: self
+#         path: $(Agent.BuildDirectory)/demo_angularapp
+#       - task: SonarCloudPrepare@1
+#         inputs:
+#           SonarCloud: 'Org_SonarCloud'
+#           organization: 'orgname'
+#           scannerMode: 'CLI'
+#           configMode: 'manual'
+#           cliProjectKey: $(repoName)
+#           cliProjectName: $(repoName)
+#           cliSources: '$(Agent.BuildDirectory)/demo_angularapp/src/main/angular'
+#           branch.name: $(BRANCH_NAME)
+
+#       - task: SonarCloudAnalyze@1
+
+#       - task: SonarCloudPublish@1
+#         inputs:
+#           pollingTimeoutSec: '300'
+
+- stage: Build
+  jobs:
+  - job: build_Project
+    steps:
+      - checkout: self
+        path: demo_angularapp
+
+      - task: NodeTool@0
+        inputs:
+          versionSpec: '14.x'
+        displayName: 'Install Node.js'
+
+      - script: |
+          cd $(Agent.BuildDirectory)/demo_angularapp/src/main/angular
+          npm install -g @angular/cli 
+          npm install
+          npm audit
+          npm run build
+
+      - task: gattjoe.SLSAProvenanceGenerator.custom-build-release-task.SLSAProvenanceGenerator@0
+        displayName: 'SLSA Provenance Generator'
+        inputs:
+          artifactPath: dist
+
+# System.PullRequest.SourceBranch
+# System.PullRequest.TargetBranch
+# $(System.PullRequest.TargetBranch) 
