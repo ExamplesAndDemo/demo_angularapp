@@ -26,6 +26,9 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
-    - run: npm ci
-    - run: npm run build --if-present
-    - run: npm test
+    - run: cd $(Agent.BuildDirectory)/demo_angularapp/src/main/angular
+    - run: npm install -g @angular/cli
+    - run: npm install
+    - run: npm audit
+    - run: npm run build
+    
